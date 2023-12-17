@@ -36,8 +36,8 @@ Before deploying the project, ensure you have the following:
    cd <repository_directory>
 
 2. Deploy the Cloudformation Stack:
-
-aws cloudformation create-stack --stack-name ForexFactoryReportStack --template-body file://cloudformation.yml --parameters file://parameters.json --capabilities CAPABILITY_IAM
+    ```bash
+    aws cloudformation create-stack --stack-name ForexFactoryReportStack --template-body file://cloudformation.yml --parameters file://parameters.json --capabilities CAPABILITY_IAM
 
 3. Monitor the Stack creation.
 
@@ -49,14 +49,14 @@ parameters.json: JSON file containing parameter values for CloudFormation.
 
 Local Development
 To test and develop locally, make sure you have Python installed. You can run the Lambda function code locally by executing:
-
-python3 lambda_function.py
+    ```bash
+    python3 lambda_function.py
 
 Note: Adjust the code as needed for local testing.
 
 To delete the CloudFormation Stack:
-
-aws cloudformation delete-stack --stack-name ForexFactoryReportStack
+    ```bash
+    aws cloudformation delete-stack --stack-name ForexFactoryReportStack
 
 
 parameters.json Ex:
