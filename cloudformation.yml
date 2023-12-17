@@ -1,0 +1,82 @@
+Parameters:
+  Email:
+    Type: String
+    Description: "Email address to receive the report"
+  S3Bucket:
+    Type: String
+    Description: "S3 bucket name to store the report"
+  SourceFile:
+    Type: String
+    Description: "Path to the source file"
+    Default: "lambda_function.py"
+
+Resources:
+  MySNSTopic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      DisplayName: "ForexFactoryReportTopic"
+      TopicName: "ForexFactoryReportTopic"
+      Subscription:
+        - Endpoint: !Ref Email
+          Protocol: "email"
+
+  MyLambdaBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Ref S3Bucket 
+
+  MyLambdaExecutionRole:
+    DependsOn: MyLambdaFunction
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+    Policies:
+      - PolicyName: "ForexFactoryReportPolicy"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "sns:Publish"
+                - "s3:GetObject"
+              Resource: !GetAtt MyLambdaFunction.Arn
+
+  MyLambdaFunction:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "lambda_function.lambda_handler"
+      Role: !GetAtt MyLambdaExecutionRole.Arn
+      FunctionName: "ForexFactoryReportLambda"
+      Runtime: "python3.8"
+      Timeout: 60
+      MemorySize: 256
+      Code:
+        S3Bucket: !Ref MyLambdaBucket
+        S3Key: "lambda_function.zip"
+      Environment:
+        Variables:
+          SNS_TOPIC: !Ref MySNSTopic
+
+  MyScheduledRule:
+    Type: "AWS::Events::Rule"
+    Properties:
+      ScheduleExpression: "cron(0 0 * * ? *)"  # This expression triggers the function daily at midnight
+      Targets:
+        - Arn: !GetAtt MyLambdaFunction.Arn
+          Id: "ForexFactoryReportLambdaTarget"
+
+  MyPermissionForEventsToInvokeLambda:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref MyLambdaFunction
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt MyScheduledRule.Arn
+
