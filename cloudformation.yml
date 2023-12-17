@@ -24,6 +24,13 @@ Resources:
     Type: "AWS::S3::Bucket"
     Properties:
       BucketName: !Ref S3Bucket 
+  
+  MyLambdaCode:
+    Type: "AWS::S3::Object"
+    Properties:
+      Bucket: !Ref MyLambdaBucket
+      Key: "lambda_function.zip"
+      Source: !Ref SourceFile
 
   MyLambdaExecutionRole:
     DependsOn: MyLambdaFunction
